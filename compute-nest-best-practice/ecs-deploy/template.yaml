@@ -5,6 +5,7 @@ Description:
     in payment options, with automatic disk attachment, security group configuration
     to permit HTTP access, provision of public IP addresses, and provision of access
     endpoints.
+
 # 参数配置
 Parameters:
   PayType:

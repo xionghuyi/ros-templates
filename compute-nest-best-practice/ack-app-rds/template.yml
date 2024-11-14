@@ -4,6 +4,8 @@ Description:
   en: Provisioning RDS instances along with ACK cluster deployment, configuring container
     applications to connect to the RDS database, encompassing network setup, database
     configuration, and payment settings.
+
+
 Parameters:
   VpcId:
     Type: String
