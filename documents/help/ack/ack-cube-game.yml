@@ -1,3 +1,4 @@
+
 ROSTemplateFormatVersion: '2015-09-01'
 Description:
   zh-cn: 使用ROS模版部署ACK集群，配置VPC、VSwitch、NatGateway及安全策略，部署魔方游戏应用，通过SLB提供外部访问。
