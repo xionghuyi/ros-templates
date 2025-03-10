@@ -7,6 +7,8 @@ English | [简体中文](./README-CN.md)
 
 > Welcome to experience ROS through the ROS [Console](https://ros-intl.console.aliyun.com/cn-beijing/stacks/create), [API](https://api.alibabacloud.com/product/ROS), [SDK](https://api.alibabacloud.com/api-tools/sdk/ROS), [CDK](https://www.alibabacloud.com/help/resource-orchestration-service/latest/ros-cdk-overview).
 
+
+
 ## Introduction
 
 Examples and best practices of ROS templates. The templates are categorized as follows:
