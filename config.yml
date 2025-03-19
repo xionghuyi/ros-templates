@@ -1,0 +1,3 @@
+template-file-path: resources/ecs/instance.yml
+parameters: 
+    InstanceType: ecs.c5.large
