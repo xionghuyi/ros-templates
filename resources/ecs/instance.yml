@@ -14,4 +14,4 @@ Resources:
         Ref: HostName
       SecurityGroupId: sg-bp1fvau34pk9vxkvkvd0
       SystemDiskCategory: cloud_essd
-      SystemDiskSize: 40
+      SystemDiskSize: 41
