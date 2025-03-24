@@ -9,7 +9,7 @@ Resources:
       VpcId: vpc-bp1kv072z4rc9norpykjd
       VSwitchId: vsw-bp1h5bzfk2unbed4ezq19
       ImageId: centos7
-      InstanceType: ecs.c5.large
+      InstanceType: ecs.e-c1m1.large
       HostName:
         Ref: HostName
       SecurityGroupId: sg-bp1fvau34pk9vxkvkvd0
