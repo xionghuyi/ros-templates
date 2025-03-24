@@ -21,22 +21,22 @@ Parameters:
     Label:
       en: VSwitch Availability Zone1
       zh-cn: 可用区1
-    AssociationProperty: ALIYUN::ECS::Instance::ZoneId
+    AssociationProperty: 'ALIYUN::ECS::Instance::ZoneId'
   ZoneId2:
     Type: String
     Label:
       en: VSwitch Availability Zone2
       zh-cn: 可用区2
-    AssociationProperty: ALIYUN::ECS::Instance::ZoneId
+    AssociationProperty: 'ALIYUN::ECS::Instance::ZoneId'
     AssociationPropertyMetadata:
       ExclusiveTo:
-      - ZoneId1
+        - ZoneId1
   InstanceType1:
     Type: String
     Label:
       en: Instance Type
       zh-cn: 实例类型1
-    AssociationProperty: ALIYUN::ECS::Instance::InstanceType
+    AssociationProperty: 'ALIYUN::ECS::Instance::InstanceType'
     AssociationPropertyMetadata:
       InstanceChargeType: PostPaid
       SystemDiskCategory: cloud_essd
@@ -46,7 +46,7 @@ Parameters:
     Label:
       en: Instance Type
       zh-cn: 实例类型2
-    AssociationProperty: ALIYUN::ECS::Instance::InstanceType
+    AssociationProperty: 'ALIYUN::ECS::Instance::InstanceType'
     AssociationPropertyMetadata:
       InstanceChargeType: PostPaid
       SystemDiskCategory: cloud_essd
@@ -59,10 +59,11 @@ Parameters:
     AssociationProperty: ALIYUN::RDS::Instance::InstanceType
     AssociationPropertyMetadata:
       ZoneId: ${ZoneId1}
-      EngineVersion: '8.0'
+      EngineVersion: "8.0"
       Engine: MySQL
       Category: HighAvailability
       DBInstanceStorageType: cloud_essd
+      CommodityCode: bards
   RdsDBPassword:
     Type: String
     Label:
@@ -73,7 +74,9 @@ Parameters:
         three of the following types: uppercase letters, lowercase letter, digits,
         and special characters. Special characters include <span style="background:#E7E9EB;"><b>!@#$%^&*()_+-=</b></span>'
       zh-cn: 必须包含三种及以上类型：大写字母、小写字母、数字、特殊符号。长度为8～32位。特殊字符包括<span style="background:#E7E9EB;"><b>!@#$%^&*()_+-=</b></span>
-    AllowedPattern: ^(?=.*[a-zA-Z])(?=.*[a-z0-9])(?=.*[a-z!@#$%^&*()_+=-])(?=.*[A-Z0-9])(?=.*[A-Z!@#$%^&*()_+=-])(?=.*[0-9!@#$%^&*()_+=-])[a-zA-Z0-9!@#$%^&*()_+=-]{8,32}$
+    AssociationProperty: ALIYUN::RDS::Instance::AccountPassword
+    AllowedPattern: 
+      ^(?=.*[a-zA-Z])(?=.*[a-z0-9])(?=.*[a-z!@#$%^&*()_+=-])(?=.*[A-Z0-9])(?=.*[A-Z!@#$%^&*()_+=-])(?=.*[0-9!@#$%^&*()_+=-])[a-zA-Z0-9!@#$%^&*()_+=-]{8,32}$
     NoEcho: true
   CommonName:
     Type: String
@@ -119,12 +122,12 @@ Resources:
         IpProtocol: tcp
         NicType: internet
       SecurityGroupEgress:
-      - PortRange: -1/-1
+      - PortRange: '-1/-1'
         Priority: 1
         IpProtocol: all
         DestCidrIp: 0.0.0.0/0
         NicType: internet
-      - PortRange: -1/-1
+      - PortRange: '-1/-1'
         Priority: 1
         IpProtocol: all
         DestCidrIp: 0.0.0.0/0
@@ -458,6 +461,6 @@ Metadata:
           en: RDS Configuration
           zh-cn: RDS配置
     TemplateTags:
-    - acs:technical-solution:high-availability-architecture:弹性高可用服务
+    - 'acs:technical-solution:high-availability-architecture:弹性高可用服务'
     Hidden:
     - CommonName

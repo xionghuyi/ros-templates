@@ -142,15 +142,6 @@ Resources:
       Name:
         Ref: MseMicroRegistryInstance
       Source: MSE
-  NatGateway:
-    Type: ALIYUN::VPC::NatGateway
-    Properties:
-      ZoneId:
-        Ref: ZoneId
-      VpcId:
-        Ref: Vpc
-      VSwitchId:
-        Ref: VSwitch
   ManagedKubernetesCluster:
     Type: ALIYUN::CS::ManagedKubernetesCluster
     Properties:
@@ -162,7 +153,7 @@ Resources:
       - Ref: VSwitch
       Name:
         Ref: ManagedKubernetesClusterName
-      KubernetesVersion: 1.26.3-aliyun.1
+      KubernetesVersion: 1.28.9-aliyun.1
       ZoneIds:
       - Ref: ZoneId
       ServiceCidr: 172.16.0.0/16
@@ -198,7 +189,7 @@ Resources:
           LoginPassword: ''
         KubernetesConfig:
           Runtime: containerd
-          RuntimeVersion: 1.6.20
+          RuntimeVersion: 1.6.28
         Count: 3
     DependsOn: NatGateway
 Outputs:

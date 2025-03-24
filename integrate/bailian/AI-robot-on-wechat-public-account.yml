@@ -1,0 +1,151 @@
+ROSTemplateFormatVersion: '2015-09-01'
+Description:
+  zh-cn: 10分钟让微信公众号成为智能客服。
+  en: Turn your WeChat official account into a smart customer service in 10 minutes.
+Parameters:
+  BailianAppId:
+    Type: String
+    Label:
+      en: Bailian App ID
+      zh-cn: 百炼应用 ID
+    Description:
+      en: >-
+        Visit the Bailian platform to view the App ID.
+      zh-cn: >-
+        访问百炼平台的<a href="https://bailian.console.aliyun.com/#/app-center" target="_blank">应用列表</a>页面，
+        查看应用 ID。
+  BailianApiKey:
+    Type: String
+    NoEcho: true
+    Label:
+      en: Bailian API-Key
+      zh-cn: 百炼 API-KEY
+    Description:
+      en: >-
+        Visit the Bailian platform to view the API Key.
+      zh-cn: >-
+        访问百炼平台的<a href="https://bailian.console.aliyun.com/?apiKey=1#/api-key" target="_blank">我的API-KEY</a>页面，
+        创建新的API-KEY或查看已有的 API-KEY。
+  WeChatAuthConfigId:
+    Type: String
+    Label:
+      en: WeChat Official Account Credentials
+      zh-cn: 微信公众号凭据
+  FlowStatus:
+    Type: String
+    Default: null
+    AllowedValues:
+      - 'Enable'
+      - 'Disable'
+    Label:
+      en: App Flow Status
+      zh-cn: 连接流状态
+Locals:
+  AppFlowValidation:
+    Type: DATASOURCE::AppFlow::Validation
+    Properties:
+      Type: user_auth
+      Rule: check_token
+      Value:
+        authConfigId:
+          Ref: WeChatAuthConfigId
+  PublicAccountType:
+    Type: Eval
+    Value:
+      Fn::Jq:
+        - First
+        - .wx_verify_info.qualification_verify
+        - Fn::GetAtt:
+            - AppFlowValidation
+            - Data
+Conditions:
+  PublicAccountCertified:
+    Fn::Equals:
+      - Ref: PublicAccountType
+      - true
+Resources:
+  AuthConfigForBailian:
+    Type: ALIYUN::AppFlow::UserAuthConfig
+    Properties:
+      Visible: 3
+      ConnectorId: 'connector-5e43ef26b53e4a158529'
+      AuthConfigName:
+        Fn::Sub: 'bailian-${ALIYUN::StackId}'
+      AuthConfig:
+        apiKey:
+          Ref: BailianApiKey
+  Flow:
+    Type: ALIYUN::AppFlow::Flow
+    Properties:
+      Visible: 3
+      From: bailian
+      FlowStatus:
+        Ref: FlowStatus
+      FlowName: '微信公众号大模型回复（订阅号、服务号）'
+      FlowDesc: '认证过的微信公众号使用大模型自动回复用户的留言'
+      TemplateId:
+        Fn::If:
+          - PublicAccountCertified
+          - 'tl-fadb4481226a4cf587c4'
+          - 'tl-715d93e708b546b7b464'
+      LaunchFlow: true
+      Parameters:
+        appId:
+          Ref: BailianAppId
+        sfmAuthId:
+          Ref: AuthConfigForBailian
+        weixinAuthId:
+          Ref: WeChatAuthConfigId
+  WeixinAuthConfigInfo:
+    Type: DATASOURCE::AppFlow::Validation
+    DependsOn: Flow
+    Properties:
+      Type: user_auth
+      Rule: check_token
+      Value:
+        authConfigId:
+          Ref: WeChatAuthConfigId
+      IgnoredErrorCodes:
+        - '61003'
+      OutputOptions:
+        - 'RefreshAlways'
+Outputs:
+  WeixinQrcodeUrl:
+    Description:
+      zh-cn: 微信体验二维码。
+      en: WeChat experience QR code.
+    Label:
+      zh-cn: 微信体验二维码
+      en: WeChat Experience QR code
+    Value:
+      Fn::Jq:
+        - First
+        - .qrcode_url
+        - Fn::GetAtt:
+            - WeixinAuthConfigInfo
+            - Data
+  WeixinAuthorizationStatus:
+    Description:
+      zh-cn: 微信公众号授权状态。
+      en: WeChat official account authorization status.
+    Label:
+      zh-cn: 授权状态
+      Fn::Jq:
+      en: Authorization Status
+    Value:
+      Fn::Jq:
+        - First
+        - 'if . == {} then "Canceled" else "Normal" end'
+        - Fn::GetAtt:
+            - WeixinAuthConfigInfo
+            - Data
+Metadata:
+  ALIYUN::ROS::Interface:
+    ParameterGroups:
+      - Parameters:
+        - BailianAppId
+        - BailianApiKey
+        - WeChatAuthConfigId
+        - FlowStatus
+    TemplateTags:
+      - acs:integrate:bailian:10分钟让微信公众号成为智能客服

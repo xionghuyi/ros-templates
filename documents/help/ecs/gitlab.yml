@@ -1,10 +1,7 @@
 ROSTemplateFormatVersion: '2015-09-01'
 Description:
-  zh-cn: 创建LAMP环境，支持新实例部署或选择现有实例，配置VPC、安全组及实例设置，自动安装LAMP堆栈，提供ECS登录与Nginx、PHP信息页面访问。
-  en: Create a LAMP environment, supporting deployment on new instances or selection
-    of existing instances, with configuration of VPC, security groups, and instance
-    settings. Automate the installation of the LAMP stack, providing access to ECS
-    login and Nginx/PHP information pages.
+  zh-cn: 部署GitLab服务。
+  en: Deploy the GitLab service.
 Conditions:
   CreateInstance:
     Fn::Equals:
@@ -45,23 +42,25 @@ Parameters:
           Fn::Equals:
           - ${InstanceSource}
           - CreateNew
-    Default: null
+    Default:
   ImageId:
     Type: String
     Label:
       en: Image of Instance
       zh-cn: 实例镜像
-    AssociationProperty: ALIYUN::ECS::Image::ImageId
     AssociationPropertyMetadata:
-      SupportedImageOwnerAlias:
-      - system
-      IsSupportCloudinit: true
+      ValueLabelMapping:
+        aliyun_3_x64_20G_alibase_20240528.vhd:
+          zh-cn: Alibaba Cloud Linux 3
+          en: Alibaba Cloud Linux 3
       Visible:
         Condition:
           Fn::Equals:
           - ${InstanceSource}
           - CreateNew
-    Default: aliyun_3_9_x64_20G_alibase_20231219.vhd
+    Default: aliyun_3_x64_20G_alibase_20240528.vhd
+    AllowedValues:
+    - aliyun_3_x64_20G_alibase_20240528.vhd
   InstanceType:
     Type: String
     Label:
@@ -78,29 +77,33 @@ Parameters:
           Fn::Equals:
           - ${InstanceSource}
           - CreateNew
-    Default: null
+    Default:
   InstancePassword:
     Type: String
     Label:
       en: Instance Password
       zh-cn: 实例密码
     Description:
-      en: Server login password, Length 8-30, must contain three(Capital letters,
-        lowercase letters, numbers, ()`~!@#$%^&*_-+=|{}[]:;'<>,.?/ Special symbol
-        in)
-      zh-cn: 服务器登录密码,长度8-30，必须包含三项（大写字母、小写字母、数字、 ()`~!@#$%^&*_-+=|{}[]:;'<>,.?/ 中的特殊符号）
+      en: >-
+        Server login password, Length 8-30, must contain three(Capital letters,
+        lowercase letters, numbers, ()`~!@#$%^&*_-+=|{}[]:;'<>,.?/ Special
+        symbol in)
+      zh-cn: >-
+        服务器登录密码,长度8-30，必须包含三项（大写字母、小写字母、数字、 ()`~!@#$%^&*_-+=|{}[]:;'<>,.?/
+        中的特殊符号）
     ConstraintDescription:
-      en: Length 8-30, must contain three(Capital letters, lowercase letters, numbers,
-        ()`~!@#$%^&*_-+=|{}[]:;'<>,.?/ Special symbol in)
-      zh-cn: 长度8-30，必须包含三项（大写字母、小写字母、数字、 ()`~!@#$%^&*_-+=|{}[]:;'<>,.?/ 中的特殊符号）
-    AssociationProperty: ALIYUN::ECS::Instance::Password
+      en: >-
+        Length 8-30, must contain three(Capital letters, lowercase letters,
+        numbers, ()`~!@#$%^&*_-+=|{}[]:;'<>,.?/ Special symbol in)
+      zh-cn: '长度8-30，必须包含三项（大写字母、小写字母、数字、 ()`~!@#$%^&*_-+=|{}[]:;''<>,.?/ 中的特殊符号）'
+    AssociationProperty: 'ALIYUN::ECS::Instance::Password'
     AssociationPropertyMetadata:
       Visible:
         Condition:
           Fn::Equals:
           - ${InstanceSource}
           - CreateNew
-    Default: null
+    Default:
     NoEcho: true
     Confirm: true
   EcsInstanceId:
@@ -116,20 +119,20 @@ Parameters:
           Fn::Equals:
           - ${InstanceSource}
           - UseExisted
-    Default: null
+    Default:
   CommonName:
     Type: String
-    Default: lamp
+    Default: deploy_gitlab_by_ros
 Resources:
   Vpc:
-    Type: ALIYUN::ECS::VPC
+    Type: 'ALIYUN::ECS::VPC'
     Condition: CreateInstance
     Properties:
       CidrBlock: 192.168.0.0/16
       VpcName:
         Fn::Sub: ${CommonName}-vpc
   VSwitch:
-    Type: ALIYUN::ECS::VSwitch
+    Type: 'ALIYUN::ECS::VSwitch'
     Condition: CreateInstance
     Properties:
       ZoneId:
@@ -140,7 +143,7 @@ Resources:
       VSwitchName:
         Fn::Sub: ${CommonName}-vsw
   SecurityGroup:
-    Type: ALIYUN::ECS::SecurityGroup
+    Type: 'ALIYUN::ECS::SecurityGroup'
     Condition: CreateInstance
     Properties:
       VpcId:
@@ -151,17 +154,17 @@ Resources:
       - PortRange: 22/22
         SourceCidrIp: 0.0.0.0/0
         IpProtocol: tcp
-      - PortRange: 3389/3389
+      - PortRange: 443/443
         SourceCidrIp: 0.0.0.0/0
         IpProtocol: tcp
-      - PortRange: 80/80
+      - PortRange: 8080/8080
         SourceCidrIp: 0.0.0.0/0
         IpProtocol: tcp
-      - PortRange: -1/-1
+      - PortRange: '-1/-1'
         SourceCidrIp: 0.0.0.0/0
         IpProtocol: icmp
   EcsInstance:
-    Type: ALIYUN::ECS::InstanceGroup
+    Type: 'ALIYUN::ECS::InstanceGroup'
     Condition: CreateInstance
     Properties:
       ZoneId:
@@ -184,24 +187,84 @@ Resources:
       SpotStrategy: SpotAsPriceGo
       Password:
         Ref: InstancePassword
-  ModuleInstallLAMP:
-    Type: MODULE::ACS::OOS::Extension
+  ModuleInstallGitLab:
+    Type: 'MODULE::ACS::OOS::Extension'
     Properties:
       EcsInstanceIds:
       - Fn::If:
         - UseExistedInstance
         - Ref: EcsInstanceId
         - Ref: EcsInstance
-      PackageName: ACS-Extension-LAMP-One-Click-1853370294850618
+      PackageName: ACS-Extension-GitLab-1853370294850618
     Version: default
   DsEcs:
-    Type: DATASOURCE::ECS::Instances
+    Type: 'DATASOURCE::ECS::Instances'
     Properties:
       InstanceIds:
       - Fn::If:
         - UseExistedInstance
         - Ref: EcsInstanceId
         - Ref: EcsInstance
+  SecurityGroupIngress_22:
+    Type: ALIYUN::ECS::SecurityGroupIngress
+    Condition: UseExistedInstance
+    Properties:
+      SecurityGroupId:
+        Fn::Jq:
+        - First
+        - .[0].SecurityGroupIds[0]
+        - Fn::GetAtt:
+          - DsEcs
+          - Instances
+      SourceCidrIp: 0.0.0.0/0
+      IpProtocol: tcp
+      NicType: intranet
+      PortRange: 22/22
+  SecurityGroupIngress_443:
+    Type: ALIYUN::ECS::SecurityGroupIngress
+    Condition: UseExistedInstance
+    Properties:
+      SecurityGroupId:
+        Fn::Jq:
+        - First
+        - .[0].SecurityGroupIds[0]
+        - Fn::GetAtt:
+          - DsEcs
+          - Instances
+      SourceCidrIp: 0.0.0.0/0
+      IpProtocol: tcp
+      NicType: intranet
+      PortRange: 443/443
+  SecurityGroupIngress_8080:
+    Type: ALIYUN::ECS::SecurityGroupIngress
+    Condition: UseExistedInstance
+    Properties:
+      SecurityGroupId:
+        Fn::Jq:
+        - First
+        - .[0].SecurityGroupIds[0]
+        - Fn::GetAtt:
+          - DsEcs
+          - Instances
+      SourceCidrIp: 0.0.0.0/0
+      IpProtocol: tcp
+      NicType: intranet
+      PortRange: 8080/8080
+  SecurityGroupIngress_-1:
+    Type: ALIYUN::ECS::SecurityGroupIngress
+    Condition: UseExistedInstance
+    Properties:
+      SecurityGroupId:
+        Fn::Jq:
+        - First
+        - .[0].SecurityGroupIds[0]
+        - Fn::GetAtt:
+          - DsEcs
+          - Instances
+      SourceCidrIp: 0.0.0.0/0
+      IpProtocol: icmp
+      NicType: intranet
+      PortRange: -1/-1
 Outputs:
   EcsLoginAddress:
     Description:
@@ -215,28 +278,13 @@ Outputs:
           - UseExistedInstance
           - Ref: EcsInstanceId
           - Ref: EcsInstance
-  NginxUrl:
+  Console@Url:
     Description:
-      en: Nginx Info Page.
-      zh-cn: Nginx信息页面。
+      en: GitLab server address.
+      zh-cn: GitLab访问地址。
     Value:
       Fn::Sub:
       - http://${PublicIp}
-      - PublicIp:
-          Fn::Jq:
-          - First
-          - if .[0].PublicIpAddress != [] then .[0].PublicIpAddress[0] else .[0].EipAddress.IpAddress
-            end
-          - Fn::GetAtt:
-            - DsEcs
-            - Instances
-  PhpUrl:
-    Description:
-      en: PHP Info Page.
-      zh-cn: PHP信息页面。
-    Value:
-      Fn::Sub:
-      - http://${PublicIp}/phpinfo.php
       - PublicIp:
           Fn::Jq:
           - First
@@ -256,6 +304,6 @@ Metadata:
       - InstancePassword
       - EcsInstanceId
     TemplateTags:
-    - acs:document-help:ecs:部署LAMP环境
+    - acs:document-help:ecs:部署GitLab服务
     Hidden:
     - CommonName

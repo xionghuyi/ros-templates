@@ -5,15 +5,6 @@ Description:
     newly created ECS instances, with configuration of VPC, switches, security groups,
     and optimization of network settings. Automates the installation of Apache, MySQL,
     and PHP.
-Conditions:
-  IsSelectExistECS:
-    Fn::Equals:
-    - Ref: SelectExistECS
-    - false
-  NotSelectExistECS:
-    Fn::Equals:
-    - Ref: SelectExistECS
-    - true
 Parameters:
   SelectExistECS:
     Type: Boolean
@@ -21,8 +12,7 @@ Parameters:
       en: Whether to select an existing instance
       zh-cn: 是否选择已有实例
     Description:
-      en: Whether to select an existing Centos7 system instance. The Centos7 system
-        instance must be connected to a public network.
+      en: Whether to select an existing Centos7 system instance. The Centos7 system instance must be connected to a public network.
       zh-cn: 是否选择已有Centos7系统实例，实例需要开通公网。
     Default: false
   VPC:
@@ -31,44 +21,39 @@ Parameters:
       en: Existing VPC Instance ID
       zh-cn: 现有VPC的实例ID
     Description:
-      en: Please search the ID starting with (vpc-xxx)from console-Virtual Private
-        Cloud.
+      en: Please search the ID starting with (vpc-xxx)from console-Virtual Private Cloud.
       zh-cn: 现有虚拟专有网络的实例ID,控制台-VPC-专有网络下查询。
     AssociationProperty: ALIYUN::ECS::VPC::VPCId
     AssociationPropertyMetadata:
       Visible:
         Condition:
           Fn::Equals:
-          - ${SelectExistECS}
-          - false
-    Default: null
+            - ${SelectExistECS}
+            - false
+    Default: Null
   ZoneId:
     Type: String
     Label:
       en: VSwitch Availability Zone
       zh-cn: 交换机可用区
     Description:
-      en: Availability Zone ID.<br><b>note：<font color='blue'>before selecting, please
-        confirm that the Availability Zone supports the specification of creating
-        ECS resources,which is recommended to be different from other VSwitch Availability
-        Zone.</font></b>
+      en: Availability Zone ID.<br><b>note：<font color='blue'>before selecting, please confirm that the Availability Zone supports the specification of creating ECS resources,which is recommended to be different from other VSwitch Availability Zone.</font></b>
       zh-cn: 可用区ID。<br><b>注： <font color='blue'>选择前请确认该可用区是否支持创建ECS资源的规格，建议与其他交换机可用区不同。</font></b>
     AssociationProperty: ALIYUN::ECS::Instance::ZoneId
     AssociationPropertyMetadata:
       Visible:
         Condition:
           Fn::Equals:
-          - ${SelectExistECS}
-          - false
-    Default: null
+            - ${SelectExistECS}
+            - false
+    Default: Null
   VSwitch:
     Type: String
     Label:
       en: VSwitch ID
       zh-cn: 网络交换机ID
     Description:
-      en: Please search the business vswitch ID starting with(vsw-xxx)from console-Virtual
-        Private Cloud-VSwitches.
+      en: Please search the business vswitch ID starting with(vsw-xxx)from console-Virtual Private Cloud-VSwitches.
       zh-cn: 现有业务网络交换机的实例ID,控制台-VPC-专有网络-交换机下查询。
     AssociationProperty: ALIYUN::ECS::VSwitch::VSwitchId
     AssociationPropertyMetadata:
@@ -77,9 +62,9 @@ Parameters:
       Visible:
         Condition:
           Fn::Equals:
-          - ${SelectExistECS}
-          - false
-    Default: null
+            - ${SelectExistECS}
+            - false
+    Default: Null
   ECSInstanceId:
     Type: String
     Label:
@@ -94,36 +79,25 @@ Parameters:
       Visible:
         Condition:
           Fn::Equals:
-          - ${SelectExistECS}
-          - true
-    Default: null
+            - ${SelectExistECS}
+            - true
+    Default: Null
   InstanceType:
     Type: String
     Label:
       en: Instance Type
       zh-cn: 实例规格
     Description:
-      en: <font color='blue'><b>1.Before selecting the model please confirm that the
-        current available zone under the model is in stock, some models need to be
-        reported in advance</b></font><br><font color='blue'><b>2.List of optional
-        models</font><br></b></font>[ecs.c5.large <font color='green'>2vCPU 4GiB Intranet
-        bandwidth1Gbps In-grid sending and receiving packages30MillionPPS</font>]<br></b>[ecs.c5.xlarge
-        <font color='green'>4vCPU 8GiB Intranet bandwidth1.5Gbps In-grid sending and
-        receiving packages50MillionPPS</font>]<br></b>[ecs.c5.2xlarge <font color='green'>8vCPU
-        16GiB Intranet bandwidth2.5Gbps In-grid sending and receiving packages80MillionPPS.</font>]
-      zh-cn: <font color='blue'><b>1.选择机型前请先确认当前可用区下该机型是否有货，部分机型需要提前报备</b></font><br><font
-        color='blue'><b>2.可选机型列表</font><br></b></font>[ecs.c5.large <font color='green'>2vCPU
-        4GiB 内网带宽1Gbps 内网收发包30万PPS</font>]<br></b>[ecs.c5.xlarge <font color='green'>4vCPU
-        8GiB 内网带宽1.5Gbps 内网收发包50万PPS</font>]<br></b>[ecs.c5.2xlarge <font color='green'>8vCPU
-        16GiB 内网带宽2.5Gbps 内网收发包80万PPS。</font>]
+      en: <font color='blue'><b>1.Before selecting the model please confirm that the current available zone under the model is in stock, some models need to be reported in advance</b></font><br><font color='blue'><b>2.List of optional models</font><br></b></font>[ecs.c5.large <font color='green'>2vCPU 4GiB Intranet bandwidth1Gbps In-grid sending and receiving packages30MillionPPS</font>]<br></b>[ecs.c5.xlarge <font color='green'>4vCPU 8GiB Intranet bandwidth1.5Gbps In-grid sending and receiving packages50MillionPPS</font>]<br></b>[ecs.c5.2xlarge <font color='green'>8vCPU 16GiB Intranet bandwidth2.5Gbps In-grid sending and receiving packages80MillionPPS.</font>]
+      zh-cn: <font color='blue'><b>1.选择机型前请先确认当前可用区下该机型是否有货，部分机型需要提前报备</b></font><br><font color='blue'><b>2.可选机型列表</font><br></b></font>[ecs.c5.large <font color='green'>2vCPU 4GiB 内网带宽1Gbps 内网收发包30万PPS</font>]<br></b>[ecs.c5.xlarge <font color='green'>4vCPU 8GiB 内网带宽1.5Gbps 内网收发包50万PPS</font>]<br></b>[ecs.c5.2xlarge <font color='green'>8vCPU 16GiB 内网带宽2.5Gbps 内网收发包80万PPS。</font>]
     AssociationProperty: ALIYUN::ECS::Instance::InstanceType
     AssociationPropertyMetadata:
       ZoneId: ZoneId
       Visible:
         Condition:
           Fn::Equals:
-          - ${SelectExistECS}
-          - false
+            - ${SelectExistECS}
+            - false
     Default: ecs.c5.large
   SystemDiskCategory:
     Type: String
@@ -131,15 +105,8 @@ Parameters:
       en: System Disk Type
       zh-cn: 系统盘类型
     Description:
-      en: '<font color=''blue''><b>Optional values:</b></font><br>[cloud_efficiency:
-        <font color=''green''>Efficient Cloud Disk</font>]<br>[cloud_ssd: <font color=''green''>SSD
-        Cloud Disk</font>]<br>[cloud_essd: <font color=''green''>ESSD Cloud Disk</font>]<br>[cloud:
-        <font color=''green''>Cloud Disk</font>]<br>[ephemeral_ssd: <font color=''green''>Local
-        SSD Cloud Disk</font>]'
-      zh-cn: '<font color=''blue''><b>可选值：</b></font><br>[cloud_efficiency: <font
-        color=''green''>高效云盘</font>]<br>[cloud_ssd: <font color=''green''>SSD云盘</font>]<br>[cloud_essd:
-        <font color=''green''>ESSD云盘</font>]<br>[cloud: <font color=''green''>普通云盘</font>]<br>[ephemeral_ssd:
-        <font color=''green''>本地SSD盘</font>]'
+      en: '<font color=''blue''><b>Optional values:</b></font><br>[cloud_efficiency: <font color=''green''>Efficient Cloud Disk</font>]<br>[cloud_ssd: <font color=''green''>SSD Cloud Disk</font>]<br>[cloud_essd: <font color=''green''>ESSD Cloud Disk</font>]<br>[cloud: <font color=''green''>Cloud Disk</font>]<br>[ephemeral_ssd: <font color=''green''>Local SSD Cloud Disk</font>]'
+      zh-cn: '<font color=''blue''><b>可选值：</b></font><br>[cloud_efficiency: <font color=''green''>高效云盘</font>]<br>[cloud_ssd: <font color=''green''>SSD云盘</font>]<br>[cloud_essd: <font color=''green''>ESSD云盘</font>]<br>[cloud: <font color=''green''>普通云盘</font>]<br>[ephemeral_ssd: <font color=''green''>本地SSD盘</font>]'
     AssociationProperty: ALIYUN::ECS::Disk::SystemDiskCategory
     AssociationPropertyMetadata:
       LocaleKey: DiskCategory
@@ -148,8 +115,8 @@ Parameters:
       Visible:
         Condition:
           Fn::Equals:
-          - ${SelectExistECS}
-          - false
+            - ${SelectExistECS}
+            - false
     Default: cloud_efficiency
   InstancePassword:
     Type: String
@@ -157,33 +124,29 @@ Parameters:
       en: Instance Password
       zh-cn: 实例密码
     Description:
-      en: Server login password, Length 8-30, must contain three(Capital letters,
-        lowercase letters, numbers, ()`~!@#$%^&*_-+=|{}[]:;'<>,.?/ Special symbol
-        in).
+      en: Server login password, Length 8-30, must contain three(Capital letters, lowercase letters, numbers, ()`~!@#$%^&*_-+=|{}[]:;'<>,.?/ Special symbol in).
       zh-cn: 服务器登录密码,长度8-30，必须包含三项（大写字母、小写字母、数字、 ()`~!@#$%^&*_-+=|{}[]:;'<>,.?/ 中的特殊符号）。
     ConstraintDescription:
-      en: Length 8-30, must contain three(Capital letters, lowercase letters, numbers,
-        ()`~!@#$%^&*_-+=|{}[]:;'<>,.?/ Special symbol in).
+      en: Length 8-30, must contain three(Capital letters, lowercase letters, numbers, ()`~!@#$%^&*_-+=|{}[]:;'<>,.?/ Special symbol in).
       zh-cn: 长度8-30，必须包含三项（大写字母、小写字母、数字、 ()`~!@#$%^&*_-+=|{}[]:;'<>,.?/ 中的特殊符号）。
+    AllowedPattern: '[0-9A-Za-z\_\-\&:;''<>,=%`~!@#\(\)\$\^\*\+\|\{\}\[\]\.\?\/]+$'
     AssociationPropertyMetadata:
       Visible:
         Condition:
           Fn::Equals:
-          - ${SelectExistECS}
-          - false
-    Default: null
-    AllowedPattern: '[0-9A-Za-z\_\-\&:;''<>,=%`~!@#\(\)\$\^\*\+\|\{\}\[\]\.\?\/]+$'
+            - ${SelectExistECS}
+            - false
     MinLength: 8
     MaxLength: 30
     NoEcho: true
+    Default: Null
   DBName:
     Type: String
     Label:
       en: DB Name
       zh-cn: 数据库名称
     Description:
-      en: MySQL database name, [1, 64] English or Chinese characters, must start with
-        a letter or Chinese in size, can contain numbers, '_' or '.', '-'.
+      en: MySQL database name, [1, 64] English or Chinese characters, must start with a letter or Chinese in size, can contain numbers, '_' or '.', '-'.
       zh-cn: MySQL数据库名称，[1, 64] 英文或中文字符，必须以字母或中文开头，可以包含数字、下划线或“.”、“-”。
     ConstraintDescription:
       en: Must begin with a letter and contain only alphanumeric characters.
@@ -197,8 +160,7 @@ Parameters:
       en: DB UserName
       zh-cn: 数据库用户名
     Description:
-      en: Username for MySQL database access.It consists of lowercase letters, numbers
-        and underscores (_), and begins with a letter. Not longer than 16 characters.
+      en: Username for MySQL database access.It consists of lowercase letters, numbers and underscores (_), and begins with a letter. Not longer than 16 characters.
       zh-cn: MySQL数据库访问的用户名。它由小写字母、数字和下划线（_）组成，以字母开头。不超过16个字符。
     ConstraintDescription:
       en: Must begin with a letter and contain only alphanumeric characters.
@@ -212,12 +174,10 @@ Parameters:
       en: DB User Password
       zh-cn: 数据库用户密码
     Description:
-      en: The MySQL user password, consisting of letters, numbers, and underline(_),
-        8 to 32 characters in length.
+      en: The MySQL user password, consisting of letters, numbers, and underline(_), 8 to 32 characters in length.
       zh-cn: MySQL用户密码，数据库访问大小写字母、数字和下划线（_），8-32个字符。
     ConstraintDescription:
-      en: Consisting of letters, numbers, and underline(_), 8 to 32 characters in
-        length.
+      en: Consisting of letters, numbers, and underline(_), 8 to 32 characters in length.
       zh-cn: 由字母、数字和下划线(_)组成，长度为8到32个字符。
     MinLength: 8
     MaxLength: 32
@@ -228,16 +188,23 @@ Parameters:
       en: DB Root Password
       zh-cn: 数据库管理员用户密码
     Description:
-      en: Root user password for MySQL, consisting of letters, numbers, and underline(_),
-        8 to 32 characters in length.
+      en: Root user password for MySQL, consisting of letters, numbers, and underline(_), 8 to 32 characters in length.
       zh-cn: MySQL的root用户密码, 由字母、数字、下划线（_）组成，长度为8~32个字符。
     ConstraintDescription:
-      en: Consisting of letters, numbers, and underline(_), 8 to 32 characters in
-        length.
+      en: Consisting of letters, numbers, and underline(_), 8 to 32 characters in length.
       zh-cn: 由字母、数字和下划线(_)组成，长度为8到32个字符。
     MinLength: 8
     MaxLength: 32
     NoEcho: true
+Conditions:
+  IsSelectExistECS:
+    Fn::Equals:
+      - Ref: SelectExistECS
+      - false
+  NotSelectExistECS:
+    Fn::Equals:
+      - Ref: SelectExistECS
+      - true
 Resources:
   SecurityGroup:
     Type: ALIYUN::ECS::SecurityGroup
@@ -246,11 +213,11 @@ Resources:
       VpcId:
         Ref: VPC
       SecurityGroupIngress:
-      - IpProtocol: tcp
-        NicType: internet
-        PortRange: 80/80
-        Priority: 1
-        SourceCidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          NicType: internet
+          PortRange: 80/80
+          Priority: 1
+          SourceCidrIp: 0.0.0.0/0
       SecurityGroupName: LAMP
   ExistWebServer:
     Type: DATASOURCE::ECS::Instances
@@ -355,17 +322,17 @@ Resources:
       Name:
         Ref: ALIYUN::StackId
     DependsOn:
-    - WebServerConditionHandle
+      - WebServerConditionHandle
   Invocation:
     Type: ALIYUN::ECS::Invocation
     Properties:
       InstanceIds:
-      - Fn::If:
-        - IsSelectExistECS
-        - Fn::GetAtt:
-          - WebServer
-          - InstanceId
-        - Ref: ECSInstanceId
+        - Fn::If:
+            - IsSelectExistECS
+            - Fn::GetAtt:
+                - WebServer
+                - InstanceId
+            - Ref: ECSInstanceId
       CommandId:
         Ref: Command
 Outputs:
@@ -373,44 +340,45 @@ Outputs:
     Description: URL for newly created apache web page.
     Value:
       Fn::Sub:
-      - http://${IP}/test.php
-      - IP:
-          Fn::If:
-          - IsSelectExistECS
-          - Fn::GetAtt:
-            - WebServer
-            - PublicIp
-          - Fn::Jq:
-            - First
-            - if .[0].PublicIpAddress != [] then .[0].PublicIpAddress[0] else .[0].EipAddress.IpAddress
-              end
-            - Fn::GetAtt:
-              - ExistWebServer
-              - Instances
+        - 'http://${IP}/test.php'
+        - IP:
+            'Fn::If':
+              - IsSelectExistECS
+              - 'Fn::GetAtt':
+                  - WebServer
+                  - PublicIp
+              - 'Fn::Jq':
+                  - First
+                  - >-
+                    if .[0].PublicIpAddress != [] then .[0].PublicIpAddress[0]
+                    else .[0].EipAddress.IpAddress end
+                  - 'Fn::GetAtt':
+                      - ExistWebServer
+                      - Instances
 Metadata:
   ALIYUN::ROS::Interface:
     ParameterGroups:
-    - Parameters:
-      - SelectExistECS
-      - VPC
-      - ZoneId
-      - VSwitch
-      Label:
-        default:
-          en: Infrastructure Configuration
-          zh-cn: 基础资源配置配置
-    - Parameters:
-      - ECSInstanceId
-      - InstanceType
-      - SystemDiskCategory
-      - InstancePassword
-      - DBName
-      - DBUser
-      - DBPassword
-      - DBRootPassword
-      Label:
-        default:
-          en: LAMP Configuration
-          zh-cn: LAMP配置
+      - Parameters:
+          - SelectExistECS
+          - VPC
+          - ZoneId
+          - VSwitch
+        Label:
+          default:
+            en: Infrastructure Configuration
+            zh-cn: 基础资源配置配置
+      - Parameters:
+          - ECSInstanceId
+          - InstanceType
+          - SystemDiskCategory
+          - InstancePassword
+          - DBName
+          - DBUser
+          - DBPassword
+          - DBRootPassword
+        Label:
+          default:
+            en: LAMP Configuration
+            zh-cn: LAMP配置
     TemplateTags:
-    - acs:example:网站:部署LAMP(Linux+Apache+MySQL+PHP)环境
+      - acs:example:网站:部署LAMP(Linux+Apache+MySQL+PHP)环境

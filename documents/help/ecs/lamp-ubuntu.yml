@@ -1,9 +1,10 @@
 ROSTemplateFormatVersion: '2015-09-01'
 Description:
-  zh-cn: 创建Docker环境的ROS模板，支持新建或使用现有ECS实例，配置VPC、安全组，自动安装Docker CE。
-  en: Create a ROS template for Docker environment, facilitating the creation of new
-    or utilization of existing ECS instances, configuring VPC and security groups,
-    with automated installation of Docker CE.
+  zh-cn: 在Ubuntu系统中创建LAMP环境，支持新实例部署或选择现有实例，配置VPC、安全组及实例设置，自动安装LAMP堆栈，提供ECS登录与Nginx、PHP信息页面访问。
+  en: Create a LAMP environment in Ubuntu, supporting deployment on new instances or selection
+    of existing instances, with configuration of VPC, security groups, and instance
+    settings. Automate the installation of the LAMP stack, providing access to ECS
+    login and Nginx/PHP information pages.
 Conditions:
   CreateInstance:
     Fn::Equals:
@@ -44,23 +45,29 @@ Parameters:
           Fn::Equals:
           - ${InstanceSource}
           - CreateNew
-    Default: null
+    Default:
   ImageId:
     Type: String
     Label:
       en: Image of Instance
       zh-cn: 实例镜像
-    AssociationProperty: ALIYUN::ECS::Image::ImageId
     AssociationPropertyMetadata:
-      SupportedImageOwnerAlias:
-      - system
-      IsSupportCloudinit: true
+      ValueLabelMapping:
+        ubuntu_22_04_x64_20G_alibase_20240710.vhd:
+          zh-cn: Ubuntu 22.04
+          en: Ubuntu 22.04
+        ubuntu_20_04_x64_20G_alibase_20240723.vhd:
+          zh-cn: Ubuntu 20.04
+          en: Ubuntu 20.04
       Visible:
         Condition:
           Fn::Equals:
           - ${InstanceSource}
           - CreateNew
-    Default: aliyun_3_9_x64_20G_alibase_20231219.vhd
+    Default:
+    AllowedValues:
+    - ubuntu_22_04_x64_20G_alibase_20240710.vhd
+    - ubuntu_20_04_x64_20G_alibase_20240723.vhd
   InstanceType:
     Type: String
     Label:
@@ -77,29 +84,33 @@ Parameters:
           Fn::Equals:
           - ${InstanceSource}
           - CreateNew
-    Default: null
+    Default:
   InstancePassword:
     Type: String
     Label:
       en: Instance Password
       zh-cn: 实例密码
     Description:
-      en: Server login password, Length 8-30, must contain three(Capital letters,
-        lowercase letters, numbers, ()`~!@#$%^&*_-+=|{}[]:;'<>,.?/ Special symbol
-        in)
-      zh-cn: 服务器登录密码,长度8-30，必须包含三项（大写字母、小写字母、数字、 ()`~!@#$%^&*_-+=|{}[]:;'<>,.?/ 中的特殊符号）
+      en: >-
+        Server login password, Length 8-30, must contain three(Capital letters,
+        lowercase letters, numbers, ()`~!@#$%^&*_-+=|{}[]:;'<>,.?/ Special
+        symbol in)
+      zh-cn: >-
+        服务器登录密码,长度8-30，必须包含三项（大写字母、小写字母、数字、 ()`~!@#$%^&*_-+=|{}[]:;'<>,.?/
+        中的特殊符号）
     ConstraintDescription:
-      en: Length 8-30, must contain three(Capital letters, lowercase letters, numbers,
-        ()`~!@#$%^&*_-+=|{}[]:;'<>,.?/ Special symbol in)
-      zh-cn: 长度8-30，必须包含三项（大写字母、小写字母、数字、 ()`~!@#$%^&*_-+=|{}[]:;'<>,.?/ 中的特殊符号）
-    AssociationProperty: ALIYUN::ECS::Instance::Password
+      en: >-
+        Length 8-30, must contain three(Capital letters, lowercase letters,
+        numbers, ()`~!@#$%^&*_-+=|{}[]:;'<>,.?/ Special symbol in)
+      zh-cn: '长度8-30，必须包含三项（大写字母、小写字母、数字、 ()`~!@#$%^&*_-+=|{}[]:;''<>,.?/ 中的特殊符号）'
+    AssociationProperty: 'ALIYUN::ECS::Instance::Password'
     AssociationPropertyMetadata:
       Visible:
         Condition:
           Fn::Equals:
           - ${InstanceSource}
           - CreateNew
-    Default: null
+    Default:
     NoEcho: true
     Confirm: true
   EcsInstanceId:
@@ -107,6 +118,12 @@ Parameters:
     Label:
       en: ECS Instance ID
       zh-cn: ECS实例ID
+    Description:
+      zh-cn: 创建ECS实例时，ECS实例ID。<br><b>注： <font color='blue'>该一键部署脚本仅支持Ubuntu（22.04
+        或 20.04），请勿选择其他操作系统的实例。</font></b>
+      en: ECS instance ID,<br><b>note： <font color='blue'>This one click deployment
+        script only supports Ubuntu（22.04 or 20.04）, please do not select instances
+        of other operating systems</font></b>
     AssociationProperty: ALIYUN::ECS::Instance::InstanceId
     AssociationPropertyMetadata:
       Status: Running
@@ -115,20 +132,20 @@ Parameters:
           Fn::Equals:
           - ${InstanceSource}
           - UseExisted
-    Default: null
+    Default:
   CommonName:
     Type: String
-    Default: docker
+    Default: deploy_lamp
 Resources:
   Vpc:
-    Type: ALIYUN::ECS::VPC
+    Type: 'ALIYUN::ECS::VPC'
     Condition: CreateInstance
     Properties:
       CidrBlock: 192.168.0.0/16
       VpcName:
         Fn::Sub: ${CommonName}-vpc
   VSwitch:
-    Type: ALIYUN::ECS::VSwitch
+    Type: 'ALIYUN::ECS::VSwitch'
     Condition: CreateInstance
     Properties:
       ZoneId:
@@ -139,7 +156,7 @@ Resources:
       VSwitchName:
         Fn::Sub: ${CommonName}-vsw
   SecurityGroup:
-    Type: ALIYUN::ECS::SecurityGroup
+    Type: 'ALIYUN::ECS::SecurityGroup'
     Condition: CreateInstance
     Properties:
       VpcId:
@@ -150,17 +167,17 @@ Resources:
       - PortRange: 22/22
         SourceCidrIp: 0.0.0.0/0
         IpProtocol: tcp
-      - PortRange: 3389/3389
+      - PortRange: 443/443
         SourceCidrIp: 0.0.0.0/0
         IpProtocol: tcp
       - PortRange: 80/80
         SourceCidrIp: 0.0.0.0/0
         IpProtocol: tcp
-      - PortRange: -1/-1
+      - PortRange: '-1/-1'
         SourceCidrIp: 0.0.0.0/0
         IpProtocol: icmp
   EcsInstance:
-    Type: ALIYUN::ECS::InstanceGroup
+    Type: 'ALIYUN::ECS::InstanceGroup'
     Condition: CreateInstance
     Properties:
       ZoneId:
@@ -174,7 +191,7 @@ Resources:
       ImageId:
         Ref: ImageId
       InstanceName:
-        Fn::Sub: ${CommonName}-ecs
+        Fn::Sub: ${CommonName}-ecs-by-ros
       InstanceType:
         Ref: InstanceType
       SystemDiskCategory: cloud_essd
@@ -183,18 +200,18 @@ Resources:
       SpotStrategy: SpotAsPriceGo
       Password:
         Ref: InstancePassword
-  ModuleInstallDocker:
-    Type: MODULE::ACS::OOS::Extension
+  ModuleInstallLAMP:
+    Type: 'MODULE::ACS::OOS::Extension'
     Properties:
       EcsInstanceIds:
       - Fn::If:
         - UseExistedInstance
         - Ref: EcsInstanceId
         - Ref: EcsInstance
-      PackageName: ACS-Extension-DockerCE-1853370294850618
+      PackageName: ACS-Extension-LAMP-One-Click-1853370294850618
     Version: default
   DsEcs:
-    Type: DATASOURCE::ECS::Instances
+    Type: 'DATASOURCE::ECS::Instances'
     Properties:
       InstanceIds:
       - Fn::If:
@@ -214,6 +231,21 @@ Outputs:
           - UseExistedInstance
           - Ref: EcsInstanceId
           - Ref: EcsInstance
+  Console@Url:
+    Description:
+      en: PHP Info Page.
+      zh-cn: PHP信息页面。
+    Value:
+      Fn::Sub:
+      - http://${PublicIp}/phpinfo.php
+      - PublicIp:
+          Fn::Jq:
+          - First
+          - if .[0].PublicIpAddress != [] then .[0].PublicIpAddress[0] else .[0].EipAddress.IpAddress
+            end
+          - Fn::GetAtt:
+            - DsEcs
+            - Instances
 Metadata:
   ALIYUN::ROS::Interface:
     ParameterGroups:
@@ -225,6 +257,6 @@ Metadata:
       - InstancePassword
       - EcsInstanceId
     TemplateTags:
-    - acs:document-help:ecs:部署Docker环境
+    - acs:document-help:ecs:部署LAMP环境（Ubuntu）
     Hidden:
     - CommonName

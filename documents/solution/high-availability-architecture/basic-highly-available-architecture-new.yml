@@ -31,6 +31,7 @@ Parameters:
       InstanceChargeType: PostPaid
       SystemDiskCategory: cloud_essd
       ZoneId: ${ZoneId}
+      DefaultValueStrategy: recent
     Label:
       en: Instance Type
       zh-cn: 实例规格1
@@ -41,6 +42,7 @@ Parameters:
       InstanceChargeType: PostPaid
       SystemDiskCategory: cloud_essd
       ZoneId: ${ZoneId}
+      DefaultValueStrategy: recent
     Label:
       en: Instance Type
       zh-cn: 实例规格2
@@ -111,6 +113,7 @@ Parameters:
       DBInstanceStorageType: cloud_essd
       Engine: MySQL
       Category: HighAvailability
+      CommodityCode: bards
   EnableCDT:
     Type: Boolean
     Label:
@@ -361,6 +364,8 @@ Resources:
         Fn::Sub: ${CommonName}-nat
       InternetChargeType: PayByLcu
       EipBindMode: NAT
+      ZoneId:
+        Ref: ZoneId2
   NatEip:
     Type: 'ALIYUN::VPC::EIP'
     Properties:
@@ -443,7 +448,6 @@ Resources:
       CommandContent:
         Fn::Sub: |-
           #!/bin/bash
-          sudo yum -y install java-1.8.0-openjdk-devel.x86_64
 
           cat << EOF >> ~/.bash_profile
           export APPLETS_RDS_ENDPOINT=${RdsInstance.InnerConnectionString}
@@ -455,7 +459,8 @@ Resources:
 
           source ~/.bash_profile
 
-          IMAGE_NAME="icms-default-registry.cn-hangzhou.cr.aliyuncs.com/solution/cloud-demo:latest" /bin/bash -c "$(curl -fsSL https://help-static-aliyun-doc.aliyuncs.com/tech-solution/install-hablog.sh)"
+          curl -fsS https://help-static-aliyun-doc.aliyuncs.com/install-script/hablog/install-hablog.sh|bash
+
 Outputs:
   Console.WebUrl:
     Description:

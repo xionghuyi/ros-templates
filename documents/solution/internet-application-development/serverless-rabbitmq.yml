@@ -7,25 +7,27 @@ Description:
 Parameters:
   CommonName:
     Type: String
+    Default: test
     Label:
       en: CommonName
       zh-cn: 名称前缀
     Description:
       en: The prefix of the name of the resource to be created.
       zh-cn: 创建的资源的名称前缀，RabbitMQ 的实例、Vhost、Exchange、Queue、Binding等资源的名称前缀。
-    Default: yunQi
+    ReadOnly: true
   PayType:
     Type: String
+    Default: Serverless
     Label:
       en: RabbitMQ Instance PayType
       zh-cn: RabbitMQ实例付费类型
     Description:
       en: The billing method of the RabbitMQ instance.
       zh-cn: RabbitMQ 实例的计费方式。
-    Default: Serverless
+    ReadOnly: true
 Resources:
   RabbitMQInstance:
-    Type: ALIYUN::AMQP::Instance
+    Type: 'ALIYUN::AMQP::Instance'
     Properties:
       PayType: PayAsYouGo
       SupportEip: true
@@ -39,21 +41,21 @@ Resources:
         Fn::Sub: ${CommonName}-${ALIYUN::StackId}
       PolicyAttachments:
         System:
-        - AliyunAMQPFullAccess
+          - AliyunAMQPFullAccess
   AccessKey:
     Type: ALIYUN::RAM::AccessKey
     Properties:
       UserName:
         Ref: User
   Vhost:
-    Type: ALIYUN::AMQP::VirtualHost
+    Type: 'ALIYUN::AMQP::VirtualHost'
     Properties:
       InstanceId:
         Ref: RabbitMQInstance
       VirtualHost:
         Fn::Sub: ${CommonName}-vhost
   Exchange:
-    Type: ALIYUN::AMQP::Exchange
+    Type: 'ALIYUN::AMQP::Exchange'
     Properties:
       InstanceId:
         Ref: RabbitMQInstance
@@ -65,7 +67,7 @@ Resources:
       VirtualHost:
         Ref: Vhost
   Queue:
-    Type: ALIYUN::AMQP::Queue
+    Type: 'ALIYUN::AMQP::Queue'
     Properties:
       InstanceId:
         Ref: RabbitMQInstance
@@ -75,13 +77,13 @@ Resources:
         Ref: Vhost
       AutoDeleteState: false
   Binding:
-    Type: ALIYUN::AMQP::Binding
+    Type: 'ALIYUN::AMQP::Binding'
     Properties:
       InstanceId:
         Ref: RabbitMQInstance
       BindingKey:
         Fn::Sub: ${CommonName}-routing-key
-      Argument: x-match:all
+      Argument: 'x-match:all'
       BindingType: '0'
       DestinationName:
         Ref: Queue
@@ -103,10 +105,14 @@ Outputs:
     Value:
       Fn::Sub: ${AccessKey.AccessKeySecret}
 Metadata:
-  ALIYUN::ROS::Interface:
+  'ALIYUN::ROS::Interface':
+    Outputs:
+      - AccessKeyId
+      - AccessKeySecret
     ParameterGroups:
-    - Parameters:
-      - CommonName
-      - PayType
+      - Parameters:
+          - CommonName
+          - PayType
     TemplateTags:
-    - acs:technical-solution:cloud-migration:云消息队列RabbitMQ版Serverless系列优势和实践-tech_solu_122
+      - acs:technical-solution:cloud-migration:云消息队列RabbitMQ版Serverless系列优势和实践-tech_solu_122
+

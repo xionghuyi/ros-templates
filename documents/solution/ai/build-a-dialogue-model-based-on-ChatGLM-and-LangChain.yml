@@ -22,27 +22,21 @@ Parameters:
     Description:
       en: PAI-EAS instance type.
       zh-cn: PAI-EAS 使用的实例规格。
-    AllowedPattern: (^ecs.*gn.*)|(^ml.*)
+    AllowedPattern: '(^ecs.*gn.*)|(^ml.*)'
 Resources:
   RandomString:
     Type: ALIYUN::RandomString
     Properties:
       length: 8
       character_classes:
-      - class: lowercase
-        min: 1
-      - class: digits
-        min: 1
-  EnablePAI:
-    Type: ALIYUN::ROS::AutoEnableService
-    Properties:
-      ServiceName: PAI
+        - class: lowercase
+          min: 1
+        - class: digits
+          min: 1
   Vpc:
     Type: ALIYUN::ECS::VPC
     Properties:
       CidrBlock: 192.168.0.0/16
-    DependsOn:
-    - EnablePAI
   VSwitch:
     Type: ALIYUN::ECS::VSwitch
     Properties:
@@ -57,53 +51,49 @@ Resources:
       VpcId:
         Ref: Vpc
       SecurityGroupIngress:
-      - PortRange: 22/22
-        Priority: 1
-        SourceCidrIp: 0.0.0.0/0
-        IpProtocol: tcp
-        NicType: internet
-      - PortRange: 80/80
-        Priority: 1
-        SourceCidrIp: 0.0.0.0/0
-        IpProtocol: tcp
-        NicType: internet
-      - PortRange: 443/443
-        Priority: 1
-        SourceCidrIp: 0.0.0.0/0
-        IpProtocol: tcp
-        NicType: internet
-      - PortRange: 3389/3389
-        Priority: 1
-        SourceCidrIp: 0.0.0.0/0
-        IpProtocol: tcp
-        NicType: internet
+        - PortRange: 22/22
+          Priority: 1
+          SourceCidrIp: 0.0.0.0/0
+          IpProtocol: tcp
+          NicType: internet
+        - PortRange: 80/80
+          Priority: 1
+          SourceCidrIp: 0.0.0.0/0
+          IpProtocol: tcp
+          NicType: internet
+        - PortRange: 443/443
+          Priority: 1
+          SourceCidrIp: 0.0.0.0/0
+          IpProtocol: tcp
+          NicType: internet
+        - PortRange: 3389/3389
+          Priority: 1
+          SourceCidrIp: 0.0.0.0/0
+          IpProtocol: tcp
+          NicType: internet
   NasFileSystem:
     Type: ALIYUN::NAS::FileSystem
     Properties:
+      ProtocolType: NFS
+      FileSystemType: standard
+      StorageType: Performance
+      DeletionForce: true
       ZoneId:
         Ref: ZoneId
       VpcId:
         Ref: Vpc
       VSwitchId:
         Ref: VSwitch
-      ProtocolType: NFS
-      FileSystemType: standard
-      StorageType: Performance
-      DeletionForce: true
   NasAccessGroup:
     Type: ALIYUN::NAS::AccessGroup
     Properties:
       AccessGroupType: Vpc
-      AccessGroupName:
+      AccessGroupName: 
         Fn::Sub: nas-access-group-${ALIYUN::StackId}
-  NasAccessRule:
-    Type: ALIYUN::NAS::AccessRule
-    Properties:
-      SourceCidrIp: 0.0.0.0/0
-      AccessGroupName:
-        Ref: NasAccessGroup
   NasMountTarget:
     Type: ALIYUN::NAS::MountTarget
+    DependsOn:
+    - NasAccessRule
     Properties:
       VpcId:
         Ref: Vpc
@@ -114,19 +104,21 @@ Resources:
         Ref: NasAccessGroup
       FileSystemId:
         Ref: NasFileSystem
-    DependsOn:
-    - NasAccessRule
+  NasAccessRule:
+    Type: ALIYUN::NAS::AccessRule
+    Properties:
+      SourceCidrIp: 0.0.0.0/0
+      AccessGroupName:
+        Ref: NasAccessGroup
   Workspace:
     Type: ALIYUN::PAI::Workspace
     Properties:
       EnvTypes:
-      - dev
-      - prod
+        - dev
+        - prod
       Description: Build a dialogue model based on ChatGLM and LangChain.
       WorkspaceName:
         Fn::Sub: chatglm_demo_${RandomString.value}
-    DependsOn:
-    - EnablePAI
   EAS:
     Type: ALIYUN::PAI::Service
     Properties:
@@ -140,7 +132,7 @@ Resources:
           computing:
             instance_type:
               Ref: PAIEASInstanceType
-            instances: null
+            instances: Null
           networking:
             vswitch_id:
               Ref: VSwitch
@@ -149,15 +141,15 @@ Resources:
             vpc_id:
               Ref: Vpc
         containers:
-        - image:
-            Fn::Sub:
-            - eas-registry-vpc.${Region}.cr.aliyuncs.com/pai-eas/chat-llm-webui:2.0
-            - Region:
-                Ref: ALIYUN::Region
-          script: python webui/webui_server.py --port=8000 --model-path=THUDM/chatglm-6b
-          port: 8000
+          - image:
+              Fn::Sub:
+                - 'eas-registry-vpc.${Region}.cr.aliyuncs.com/pai-eas/chat-llm-webui:2.0'
+                - Region:
+                    Ref: ALIYUN::Region
+            script: 'python webui/webui_server.py --port=8000 --model-path=THUDM/chatglm-6b'
+            port: 8000
     DependsOn:
-    - Workspace
+      - Workspace
 Outputs:
   Namespace:
     Description:
@@ -165,13 +157,13 @@ Outputs:
       en: The namespace where the service resides.
     Value:
       Fn::GetAtt:
-      - EAS
-      - Namespace
+        - EAS
+        - Namespace
 Metadata:
   ALIYUN::ROS::Interface:
     ParameterGroups:
-    - Parameters:
-      - ZoneId
-      - PAIEASInstanceType
+      - Parameters:
+          - ZoneId
+          - PAIEASInstanceType
     TemplateTags:
-    - acs:technical-solution:AI:ChatGLM和LangChain搭建对话模型-tech_solu_31
+      - acs:technical-solution:AI:ChatGLM和LangChain搭建对话模型-tech_solu_31

@@ -3,26 +3,56 @@ Description:
   zh-cn: 创建CDN域加速OSS访问，自动开启CDN服务，配置源站及DNS解析记录。
   en: Create a CDN domain to accelerate OSS access, automatically enabling the CDN
     service, and configure the origin server and DNS resolution records.
+Conditions:
+  CreateBucketConditions:
+    Fn::Equals:
+    - true
+    - Ref: WhetherCreateBucket
 Parameters:
-  DomainName:
+  WhetherCreateBucket:
+    Type: Boolean
+    Label:
+      en: WhetherCreateBucket
+      zh-cn: 是否新建OSS Bucket
+    Default: true
+  NewBucketName:
+    Default: null
     Type: String
     Label:
-      zh-cn: 加速域名
-      en: Accelerated domain name
+      en: NewBucketName
+      zh-cn: 新建OSS Bucket名称
     Description:
-      zh-cn: 加速域名是指接入CDN，用于加速源站的域名。该示例为oss.example.com。
-      en: Accelerated domain name refers to the domain name of the access CDN used
-        to accelerate the source site. The example is oss.example.com.
-    Default: oss.example.com
-  OssDomain:
+      en: Bucket names must be globally unique within the scope of OSS. The length
+        is 3~63 characters. Must start and end with a lowercase English letter or
+        number, and can contain lowercase English letters, numbers, and dashes (-).
+      zh-cn: Bucket 名称在 OSS 范围内必须全局唯一。长度为3~63个字符。必须以小写英文字母或数字开头和结尾，可包含小写英文字母、数字和短划线（-）。
+    AssociationProperty: AutoCompleteInput
+    AssociationPropertyMetadata:
+      Length: 6
+      Prefix: test-bucketname-
+      CharacterClasses:
+        - Class: lowercase
+          min: 1
+      Visible:
+        Condition:
+          Fn::Equals:
+          - ${WhetherCreateBucket}
+          - true
+    AllowedPattern: ^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$
+  ExistBucketName:
     Type: String
     Label:
-      zh-cn: 源站信息
-      en: Source station information
-    Description:
-      zh-cn: 需要加速的OSS Bucket域名（结构为BucketName.Endpoint）。
-      en: The OSS Bucket domain name that needs acceleration (structured as BucketName.Endpoint).
-    Default: examplebucket.oss-cn-hangzhou.aliyuncs.com
+      en: Exist BucketName
+      zh-cn: 选择已有OSS Bucket
+    AssociationProperty: ALIYUN::OSS::Bucket::BucketName
+    AssociationPropertyMetadata:
+      RegionId: ${ALIYUN::Region}
+      Visible:
+        Condition:
+          Fn::Equals:
+          - ${WhetherCreateBucket}
+          - false
+    Default: ''
   Scope:
     Type: String
     Label:
@@ -30,15 +60,54 @@ Parameters:
       en: Region
     Description:
       zh-cn: 加速区域含中国内地时（domestic或global），加速域名必须备案，且账号必须实名认证。
-      en: When the acceleration region includes mainland China（domestic or global）,
-        the accelerated domain must be registered (ICP license), and the account must
-        be verified (real-name authentication).
+      en: When the acceleration region includes mainland China（domestic or global）, the accelerated domain must be registered (ICP license), and the account must be verified (real-name authentication).
     Default: domestic
     AllowedValues:
-    - domestic
-    - overseas
-    - global
+      - domestic
+      - overseas
+      - global
+  DomainName:
+    Type: String
+    Label:
+      zh-cn: 加速域名
+      en: Accelerated domain name
+    Description:
+      zh-cn: 加速域名是指接入CDN，用于加速源站的域名。该示例为oss.example.com。
+      en: Accelerated domain name refers to the domain name of the access CDN used to accelerate the source site. The example is oss.example.com.
+    Default: oss.example.com
 Resources:
+  OSSBucket:
+    Type: ALIYUN::OSS::Bucket
+    Condition: CreateBucketConditions
+    Properties:
+      BucketName:
+        Fn::If:
+          - CreateBucketConditions
+          - Ref: NewBucketName
+          - Ref: ExistBucketName
+      DeletionForce: true
+      CORSConfiguration:
+        CORSRule:
+        - AllowedHeader:
+          - '*'
+          AllowedMethod:
+          - POST
+          AllowedOrigin:
+          - '*'
+          MaxAgeSeconds: 0
+  DomainConfig:
+    DependsOn: Domain
+    Type: ALIYUN::CDN::DomainConfig
+    Properties:
+      FunctionList:
+        - FunctionArgs:
+            - ArgName: private_oss_auth
+              ArgValue: 'on'
+            - ArgName: perm_private_oss_tbl
+              ArgValue: ''
+          FunctionName: l2_oss_key
+      DomainNames:
+        Ref: DomainName
   OpenCdnService:
     Type: ALIYUN::ROS::AutoEnableService
     Properties:
@@ -47,56 +116,70 @@ Resources:
     Type: ALIYUN::CDN::Domain
     Properties:
       Sources:
-        Fn::Sub:
-        - '[{"content":"${content}", "type":"oss", "priority":"20", "port":80, "weight":"10"}]'
-        - content:
-            Ref: OssDomain
+        Fn::If:
+          - CreateBucketConditions
+          - Fn::Sub: '[{"content":"${NewBucketName}.oss-${ALIYUN::Region}.aliyuncs.com", "type":"oss", "priority":"20", "port":80, "weight":"10"}]'
+          - Fn::Sub: '[{"content":"${ExistBucketName}.oss-${ALIYUN::Region}.aliyuncs.com", "type":"oss", "priority":"20", "port":80, "weight":"10"}]'
       Scope:
         Ref: Scope
       CdnType: web
       DomainName:
         Ref: DomainName
-    DependsOn: OpenCdnService
+    DependsOn: 
+      - OpenCdnService
+      - OSSBucket
   DomainRecord:
     Type: ALIYUN::DNS::DomainRecord
     Properties:
       Type: CNAME
       RR:
         Fn::Select:
-        - '0'
-        - Fn::Split:
-          - .
-          - Ref: DomainName
+          - '0'
+          - Fn::Split:
+              - .
+              - Ref: DomainName
       Value:
         Fn::GetAtt:
-        - Domain
-        - Cname
+          - Domain
+          - Cname
       DomainName:
         Fn::Join:
-        - .
-        - - Fn::Select:
-            - '1'
-            - Fn::Split:
-              - .
-              - Ref: DomainName
-          - Fn::Select:
-            - '2'
-            - Fn::Split:
-              - .
-              - Ref: DomainName
+          - .
+          - - Fn::Select:
+                - '1'
+                - Fn::Split:
+                    - .
+                    - Ref: DomainName
+            - Fn::Select:
+                - '2'
+                - Fn::Split:
+                    - .
+                    - Ref: DomainName
     DependsOn: Domain
 Outputs:
-  Cname:
+  Console.Cname:
+    Label: CNAME
     Description: CNAME
     Value:
       Fn::GetAtt:
-      - Domain
-      - Cname
+        - Domain
+        - Cname
+  Console.Bucket:
+    Label:
+      zh-cn: Bucket
+      en: Bucket
+    Description:
+      zh-cn: 文件上传到的bucket控制台页面。可访问该链接查看上传情况。
+      en: Bucket console page, view upload status.
+    Value: 
+      Fn::If:
+        - CreateBucketConditions
+        - Fn::Sub: https://oss.console.aliyun.com/bucket/oss-${ALIYUN::Region}/${NewBucketName}
+        - Fn::Sub: https://oss.console.aliyun.com/bucket/oss-${ALIYUN::Region}/${ExistBucketName}    
 Metadata:
   ALIYUN::ROS::Interface:
     ParameterGroups:
-    - Parameters:
-      - DomainName
-      - OssDomain
+      - Parameters:
+          - DomainName
     TemplateTags:
-    - acs:document-help:oss:使用CDN加速OSS访问
+      - acs:document-help:oss:使用CDN加速OSS访问
